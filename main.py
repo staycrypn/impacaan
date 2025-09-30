@@ -1,8 +1,5 @@
 import streamlit as st
 import random
-import requests
-from PIL import Image
-from io import BytesIO
 
 # Mnemonica stack
 MNEMONICA = [
@@ -12,23 +9,12 @@ MNEMONICA = [
     "4S","7H","4D","AC","9C","JS","QD","7C","QS","10D","6C","AH","9D"
 ]
 
-CARD_URL = "https://deckofcardsapi.com/static/img/{code}.png"
+# Map for suit symbols
+SUIT_SYMBOLS = {"C":"♣","D":"♦","H":"♡","S":"♠"}
 
-# Cache individual images
-@st.cache_data
-def load_card(code):
-    try:
-        resp = requests.get(CARD_URL.format(code=code), timeout=5)
-        resp.raise_for_status()
-        return Image.open(BytesIO(resp.content))
-    except:
-        return Image.new("RGB", (120,180), (50,50,50))  # placeholder
+st.set_page_config(page_title="ACAAN Helper", layout="centered")
 
-# Preload all images once
-if 'card_images' not in st.session_state:
-    st.session_state.card_images = {c: load_card(c) for c in MNEMONICA}
-
-# Session state for card, number, and modes
+# Session state
 if 'current_card' not in st.session_state:
     st.session_state.current_card = random.choice(MNEMONICA)
 if 'current_number' not in st.session_state:
@@ -38,18 +24,43 @@ if 'change_card_mode' not in st.session_state:
 if 'change_number_mode' not in st.session_state:
     st.session_state.change_number_mode = 'random'
 
-st.set_page_config(page_title="ACAAN Helper", layout="centered")
 st.title("ACAAN Helper")
 
-# Display
+# Function to render card HTML
+def render_card(code):
+    rank = code[:-1]
+    suit = SUIT_SYMBOLS[code[-1]]
+    color = "red" if suit in ["♡","♦"] else "black"
+    card_html = f"""
+    <div style="
+        width:120px;
+        height:180px;
+        border-radius:12px;
+        border:2px solid #333;
+        background-color:white;
+        color:{color};
+        display:flex;
+        flex-direction:column;
+        justify-content:space-between;
+        padding:10px;
+        font-family:sans-serif;
+        box-shadow:3px 3px 8px rgba(0,0,0,0.4);
+    ">
+        <div style="font-size:24px;">{rank}{suit}</div>
+        <div style="font-size:48px; display:flex; justify-content:center; align-items:center;">{suit}</div>
+        <div style="font-size:24px; transform:rotate(180deg);">{rank}{suit}</div>
+    </div>
+    """
+    st.markdown(card_html, unsafe_allow_html=True)
+
+# Display card
 col1, col2 = st.columns([2,1])
 with col1:
-    st.image(st.session_state.card_images[st.session_state.current_card], width=180)
+    render_card(st.session_state.current_card)
 with col2:
     st.markdown(f"### Position: {st.session_state.current_number}")
-    # tiny white dot if card matches position
     if MNEMONICA.index(st.session_state.current_card)+1 == st.session_state.current_number:
-        st.markdown("<div style='width:6px;height:6px;background:white;border-radius:50%;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='width:8px;height:8px;background:white;border-radius:50%;'></div>", unsafe_allow_html=True)
 
 # Buttons
 col3, col4 = st.columns(2)
