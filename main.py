@@ -9,12 +9,12 @@ MNEMONICA = [
     "4S","7H","4D","AC","9C","JS","QD","7C","QS","10D","6C","AH","9D"
 ]
 
-# Map for suit symbols
+# Map suits to symbols
 SUIT_SYMBOLS = {"C":"♣","D":"♦","H":"♡","S":"♠"}
 
 st.set_page_config(page_title="ACAAN Helper", layout="centered")
 
-# Session state
+# Session state for card, number, and modes
 if 'current_card' not in st.session_state:
     st.session_state.current_card = random.choice(MNEMONICA)
 if 'current_number' not in st.session_state:
@@ -26,17 +26,26 @@ if 'change_number_mode' not in st.session_state:
 
 st.title("ACAAN Helper")
 
-# Function to render card HTML
+# Function to render the card
 def render_card(code):
     rank = code[:-1]
     suit = SUIT_SYMBOLS[code[-1]]
     color = "red" if suit in ["♡","♦"] else "black"
+
+    # Magician-only subtle signal
+    if MNEMONICA.index(st.session_state.current_card)+1 == st.session_state.current_number:
+        border_color = "#a0ffa0"  # very subtle green border for magician
+        shadow = "0 0 5px rgba(0,255,0,0.2)"
+    else:
+        border_color = "#333"
+        shadow = "3px 3px 8px rgba(0,0,0,0.4)"
+
     card_html = f"""
     <div style="
         width:120px;
         height:180px;
         border-radius:12px;
-        border:2px solid #333;
+        border:2px solid {border_color};
         background-color:white;
         color:{color};
         display:flex;
@@ -44,7 +53,7 @@ def render_card(code):
         justify-content:space-between;
         padding:10px;
         font-family:sans-serif;
-        box-shadow:3px 3px 8px rgba(0,0,0,0.4);
+        box-shadow:{shadow};
     ">
         <div style="font-size:24px;">{rank}{suit}</div>
         <div style="font-size:48px; display:flex; justify-content:center; align-items:center;">{suit}</div>
@@ -53,16 +62,14 @@ def render_card(code):
     """
     st.markdown(card_html, unsafe_allow_html=True)
 
-# Display card
+# Display card and number
 col1, col2 = st.columns([2,1])
 with col1:
     render_card(st.session_state.current_card)
 with col2:
     st.markdown(f"### Position: {st.session_state.current_number}")
-    if MNEMONICA.index(st.session_state.current_card)+1 == st.session_state.current_number:
-        st.markdown("<div style='width:8px;height:8px;background:white;border-radius:50%;'></div>", unsafe_allow_html=True)
 
-# Buttons
+# Buttons with magic trick logic
 col3, col4 = st.columns(2)
 with col3:
     if st.button("Change Card"):
