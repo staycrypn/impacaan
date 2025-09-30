@@ -3,16 +3,14 @@ import random
 
 # Mnemonica stack
 MNEMONICA = [
-    "4C","2H","7D","3C","4H","6D","AS","5H","9S","2S","QH","3D","QC",
-    "8H","6S","5S","9H","KC","2D","JH","3S","8S","6H","10C","5D","KD",
-    "2C","3H","8D","5C","KS","JD","8C","10S","KH","JC","7S","10H","AD",
-    "4S","7H","4D","AC","9C","JS","QD","7C","QS","10D","6C","AH","9D"
+    "4C", "2H", "7D", "3C", "4H", "6D", "AS", "5H", "9S", "2S", "QH", "3D", "QC",
+    "8H", "6S", "5S", "9H", "KC", "2D", "JH", "3S", "8S", "6H", "10C", "5D", "KD",
+    "2C", "3H", "8D", "5C", "KS", "JD", "8C", "10S", "KH", "JC", "7S", "10H", "AD",
+    "4S", "7H", "4D", "AC", "9C", "JS", "QD", "7C", "QS", "10D", "6C", "AH", "9D"
 ]
 
-# Map suits to symbols
+# Suit symbols
 SUIT_SYMBOLS = {"C":"♣","D":"♦","H":"♡","S":"♠"}
-
-st.set_page_config(page_title="ACAAN Helper", layout="centered")
 
 # Session state
 if 'current_card' not in st.session_state:
@@ -26,15 +24,15 @@ if 'change_number_mode' not in st.session_state:
 
 st.title("ACAAN Helper")
 
-# Function to render the card
+# Render card
 def render_card(code):
     rank = code[:-1]
     suit = SUIT_SYMBOLS[code[-1]]
     color = "red" if suit in ["♡","♦"] else "black"
 
-    # Green border if card & number match (magician-only)
+    # Magician-only subtle signal (green border)
     if MNEMONICA.index(st.session_state.current_card)+1 == st.session_state.current_number:
-        border_color = "#00ff00"  # subtle green
+        border_color = "#00ff00"  # green for magician
         shadow = "0 0 5px rgba(0,255,0,0.2)"
     else:
         border_color = "#333"
@@ -69,24 +67,19 @@ with col1:
 with col2:
     st.markdown(f"### Position: {st.session_state.current_number}")
 
-# Buttons with proper forced/random logic
+# Buttons with the original Tkinter logic
 col3, col4 = st.columns(2)
 with col3:
     if st.button("Change Card", key="card_btn"):
         if st.session_state.change_card_mode == 'random':
-            # Random card
             new_card = random.choice(MNEMONICA)
             attempts = 0
             while new_card == st.session_state.current_card and attempts < 6:
                 new_card = random.choice(MNEMONICA)
                 attempts += 1
             st.session_state.current_card = new_card
-            # Only force number if mode says so
-            if st.session_state.change_number_mode == 'force':
-                st.session_state.current_number = MNEMONICA.index(st.session_state.current_card) + 1
-            st.session_state.change_number_mode = 'random'
+            st.session_state.change_number_mode = 'force'
         else:
-            # Force card to match current number
             st.session_state.current_card = MNEMONICA[st.session_state.current_number - 1]
             st.session_state.change_number_mode = 'random'
         st.session_state.change_card_mode = 'random'
@@ -94,14 +87,9 @@ with col3:
 with col4:
     if st.button("Change Number", key="number_btn"):
         if st.session_state.change_number_mode == 'random':
-            # Random number
             st.session_state.current_number = random.randint(1,52)
-            # Only force card if mode says so
-            if st.session_state.change_card_mode == 'force':
-                st.session_state.current_card = MNEMONICA[st.session_state.current_number - 1]
-            st.session_state.change_card_mode = 'random'
+            st.session_state.change_card_mode = 'force'
         else:
-            # Force number to match current card
             st.session_state.current_number = MNEMONICA.index(st.session_state.current_card) + 1
             st.session_state.change_card_mode = 'random'
         st.session_state.change_number_mode = 'random'
