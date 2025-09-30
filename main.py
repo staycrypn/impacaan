@@ -9,7 +9,7 @@ MNEMONICA = [
     "4S", "7H", "4D", "AC", "9C", "JS", "QD", "7C", "QS", "10D", "6C", "AH", "9D"
 ]
 
-# Suit symbols
+# Map suits to symbols
 SUIT_SYMBOLS = {"C":"♣","D":"♦","H":"♡","S":"♠"}
 
 # Session state
@@ -24,15 +24,15 @@ if 'change_number_mode' not in st.session_state:
 
 st.title("ACAAN Helper")
 
-# Render card
+# Render card function
 def render_card(code):
     rank = code[:-1]
     suit = SUIT_SYMBOLS[code[-1]]
     color = "red" if suit in ["♡","♦"] else "black"
 
-    # Magician-only subtle signal (green border)
-    if MNEMONICA.index(st.session_state.current_card)+1 == st.session_state.current_number:
-        border_color = "#00ff00"  # green for magician
+    # Magician-only subtle green border if card & number match
+    if MNEMONICA.index(st.session_state.current_card) + 1 == st.session_state.current_number:
+        border_color = "#00ff00"
         shadow = "0 0 5px rgba(0,255,0,0.2)"
     else:
         border_color = "#333"
@@ -67,7 +67,7 @@ with col1:
 with col2:
     st.markdown(f"### Position: {st.session_state.current_number}")
 
-# Buttons with the original Tkinter logic
+# Buttons using exact Tkinter random/force logic
 col3, col4 = st.columns(2)
 with col3:
     if st.button("Change Card", key="card_btn"):
