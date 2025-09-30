@@ -14,7 +14,7 @@ SUIT_SYMBOLS = {"C":"♣","D":"♦","H":"♡","S":"♠"}
 
 st.set_page_config(page_title="ACAAN Helper", layout="centered")
 
-# Session state for card, number, and modes
+# Session state
 if 'current_card' not in st.session_state:
     st.session_state.current_card = random.choice(MNEMONICA)
 if 'current_number' not in st.session_state:
@@ -32,10 +32,10 @@ def render_card(code):
     suit = SUIT_SYMBOLS[code[-1]]
     color = "red" if suit in ["♡","♦"] else "black"
 
-    # Magician-only subtle signal: border turns black if card & number match
+    # Green border if card & number match (magician-only)
     if MNEMONICA.index(st.session_state.current_card)+1 == st.session_state.current_number:
-        border_color = "#000000"  # subtle black
-        shadow = "0 0 3px rgba(0,0,0,0.2)"
+        border_color = "#00ff00"  # subtle green
+        shadow = "0 0 5px rgba(0,255,0,0.2)"
     else:
         border_color = "#333"
         shadow = "3px 3px 8px rgba(0,0,0,0.4)"
@@ -69,19 +69,24 @@ with col1:
 with col2:
     st.markdown(f"### Position: {st.session_state.current_number}")
 
-# Buttons with magic trick logic
+# Buttons with proper forced/random logic
 col3, col4 = st.columns(2)
 with col3:
     if st.button("Change Card", key="card_btn"):
         if st.session_state.change_card_mode == 'random':
+            # Random card
             new_card = random.choice(MNEMONICA)
             attempts = 0
             while new_card == st.session_state.current_card and attempts < 6:
                 new_card = random.choice(MNEMONICA)
                 attempts += 1
             st.session_state.current_card = new_card
-            st.session_state.change_number_mode = 'force'
+            # Only force number if mode says so
+            if st.session_state.change_number_mode == 'force':
+                st.session_state.current_number = MNEMONICA.index(st.session_state.current_card) + 1
+            st.session_state.change_number_mode = 'random'
         else:
+            # Force card to match current number
             st.session_state.current_card = MNEMONICA[st.session_state.current_number - 1]
             st.session_state.change_number_mode = 'random'
         st.session_state.change_card_mode = 'random'
@@ -89,9 +94,14 @@ with col3:
 with col4:
     if st.button("Change Number", key="number_btn"):
         if st.session_state.change_number_mode == 'random':
+            # Random number
             st.session_state.current_number = random.randint(1,52)
-            st.session_state.change_card_mode = 'force'
+            # Only force card if mode says so
+            if st.session_state.change_card_mode == 'force':
+                st.session_state.current_card = MNEMONICA[st.session_state.current_number - 1]
+            st.session_state.change_card_mode = 'random'
         else:
+            # Force number to match current card
             st.session_state.current_number = MNEMONICA.index(st.session_state.current_card) + 1
             st.session_state.change_card_mode = 'random'
         st.session_state.change_number_mode = 'random'
