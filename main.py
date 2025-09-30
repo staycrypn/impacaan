@@ -14,17 +14,19 @@ MNEMONICA = [
 
 CARD_URL = "https://deckofcardsapi.com/static/img/{code}.png"
 
-# Preload all card images once
+# Cache each card individually for reliability
 @st.cache_data(show_spinner=False)
-def preload_all_cards():
-    cache = {}
-    for code in MNEMONICA:
-        resp = requests.get(CARD_URL.format(code=code))
+def load_card(code):
+    url = CARD_URL.format(code=code)
+    try:
+        resp = requests.get(url, timeout=5)
+        resp.raise_for_status()  # Raise error if not 200
         img = Image.open(BytesIO(resp.content))
-        cache[code] = img
-    return cache
-
-card_images = preload_all_cards()
+        return img
+    except Exception as e:
+        # If a card fails, return a blank placeholder
+        st.warning(f"Failed to load card {code}, showing placeholder")
+        return Image.new("RGB", (180, 260), color=(50,50,50))
 
 st.set_page_config(page_title="ACAAN Helper", layout="centered")
 st.title("ACAAN Helper")
@@ -38,7 +40,7 @@ if 'current_number' not in st.session_state:
 # Display
 col1, col2 = st.columns([2,1])
 with col1:
-    st.image(card_images[st.session_state.current_card], width=180)
+    st.image(load_card(st.session_state.current_card), width=180)
 with col2:
     st.markdown(f"### Position: {st.session_state.current_number}")
     if MNEMONICA.index(st.session_state.current_card)+1 == st.session_state.current_number:
