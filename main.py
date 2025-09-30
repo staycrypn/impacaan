@@ -14,35 +14,40 @@ MNEMONICA = [
 
 CARD_URL = "https://deckofcardsapi.com/static/img/{code}.png"
 
-# Cache each card individually for reliability
-@st.cache_data(show_spinner=False)
+# Cache individual images
+@st.cache_data
 def load_card(code):
-    url = CARD_URL.format(code=code)
     try:
-        resp = requests.get(url, timeout=5)
-        resp.raise_for_status()  # Raise error if not 200
-        img = Image.open(BytesIO(resp.content))
-        return img
-    except Exception as e:
-        # If a card fails, return a blank placeholder
-        st.warning(f"Failed to load card {code}, showing placeholder")
-        return Image.new("RGB", (180, 260), color=(50,50,50))
+        resp = requests.get(CARD_URL.format(code=code), timeout=5)
+        resp.raise_for_status()
+        return Image.open(BytesIO(resp.content))
+    except:
+        return Image.new("RGB", (120,180), (50,50,50))  # placeholder
+
+# Preload all images once
+if 'card_images' not in st.session_state:
+    st.session_state.card_images = {c: load_card(c) for c in MNEMONICA}
+
+# Session state for card, number, and modes
+if 'current_card' not in st.session_state:
+    st.session_state.current_card = random.choice(MNEMONICA)
+if 'current_number' not in st.session_state:
+    st.session_state.current_number = random.randint(1,52)
+if 'change_card_mode' not in st.session_state:
+    st.session_state.change_card_mode = 'random'
+if 'change_number_mode' not in st.session_state:
+    st.session_state.change_number_mode = 'random'
 
 st.set_page_config(page_title="ACAAN Helper", layout="centered")
 st.title("ACAAN Helper")
 
-# Session state
-if 'current_card' not in st.session_state:
-    st.session_state.current_card = random.choice(MNEMONICA)
-if 'current_number' not in st.session_state:
-    st.session_state.current_number = random.randint(1, 52)
-
 # Display
 col1, col2 = st.columns([2,1])
 with col1:
-    st.image(load_card(st.session_state.current_card), width=180)
+    st.image(st.session_state.card_images[st.session_state.current_card], width=180)
 with col2:
     st.markdown(f"### Position: {st.session_state.current_number}")
+    # tiny white dot if card matches position
     if MNEMONICA.index(st.session_state.current_card)+1 == st.session_state.current_number:
         st.markdown("<div style='width:6px;height:6px;background:white;border-radius:50%;'></div>", unsafe_allow_html=True)
 
@@ -50,12 +55,25 @@ with col2:
 col3, col4 = st.columns(2)
 with col3:
     if st.button("Change Card"):
-        new_card = random.choice(MNEMONICA)
-        attempts = 0
-        while new_card == st.session_state.current_card and attempts < 6:
+        if st.session_state.change_card_mode == 'random':
             new_card = random.choice(MNEMONICA)
-            attempts +=1
-        st.session_state.current_card = new_card
+            attempts = 0
+            while new_card == st.session_state.current_card and attempts < 6:
+                new_card = random.choice(MNEMONICA)
+                attempts += 1
+            st.session_state.current_card = new_card
+            st.session_state.change_number_mode = 'force'
+        else:
+            st.session_state.current_card = MNEMONICA[st.session_state.current_number - 1]
+            st.session_state.change_number_mode = 'random'
+        st.session_state.change_card_mode = 'random'
+
 with col4:
     if st.button("Change Number"):
-        st.session_state.current_number = random.randint(1,52)
+        if st.session_state.change_number_mode == 'random':
+            st.session_state.current_number = random.randint(1,52)
+            st.session_state.change_card_mode = 'force'
+        else:
+            st.session_state.current_number = MNEMONICA.index(st.session_state.current_card) + 1
+            st.session_state.change_card_mode = 'random'
+        st.session_state.change_number_mode = 'random'
