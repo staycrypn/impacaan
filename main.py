@@ -32,10 +32,10 @@ def render_card(code):
     suit = SUIT_SYMBOLS[code[-1]]
     color = "red" if suit in ["♡","♦"] else "black"
 
-    # Magician-only subtle signal
+    # Magician-only subtle signal: border turns black if card & number match
     if MNEMONICA.index(st.session_state.current_card)+1 == st.session_state.current_number:
-        border_color = "#a0ffa0"  # very subtle green border for magician
-        shadow = "0 0 5px rgba(0,255,0,0.2)"
+        border_color = "#000000"  # subtle black
+        shadow = "0 0 3px rgba(0,0,0,0.2)"
     else:
         border_color = "#333"
         shadow = "3px 3px 8px rgba(0,0,0,0.4)"
@@ -72,7 +72,7 @@ with col2:
 # Buttons with magic trick logic
 col3, col4 = st.columns(2)
 with col3:
-    if st.button("Change Card"):
+    if st.button("Change Card", key="card_btn"):
         if st.session_state.change_card_mode == 'random':
             new_card = random.choice(MNEMONICA)
             attempts = 0
@@ -87,7 +87,7 @@ with col3:
         st.session_state.change_card_mode = 'random'
 
 with col4:
-    if st.button("Change Number"):
+    if st.button("Change Number", key="number_btn"):
         if st.session_state.change_number_mode == 'random':
             st.session_state.current_number = random.randint(1,52)
             st.session_state.change_card_mode = 'force'
